@@ -1,0 +1,34 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<!-- <link rel="stylesheet" href="{{url_for('.static', filename='signin.css')}}"> -->
+{% endblock %}
+
+{% block content %}
+    {% if rows %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">K</th>
+                <th scope="col">V</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr>
+            <td><a href="/get/{{ row.K }}">{{ row.K }}</a></td>
+            <td>{{ row.V }}</td>
+        </tr>
+        {% endfor %}
+    </tbody></table>
+    {% else %}
+    <p>
+        <strong>Error -- No rows!</strong>
+    </p>
+    {% endif %}
+{% endblock %}

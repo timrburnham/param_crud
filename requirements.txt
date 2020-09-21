@@ -1,0 +1,7 @@
+Flask
+Flask-Bootstrap
+Flask-Login
+Flask-SQLAlchemy
+Flask-WTF
+ibm-db
+ibm-db-sa

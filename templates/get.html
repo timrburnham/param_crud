@@ -1,4 +1,4 @@
-{% extends "bootstrap/base.html" %}
+{% extends "base.html" %}
 
 {% block title %}
 Dashboard
@@ -6,12 +6,12 @@ Dashboard
 
 {% block styles %}
 {{super()}}
-<!-- <link rel="stylesheet" href="{{url_for('.static', filename='signin.css')}}"> -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.css"/>
 {% endblock %}
 
 {% block content %}
     {% if rows %}
-    <table class="table">
+    <table id="datatable" class="table">
         <thead>
             <tr>
                 <th scope="col">K</th>
@@ -31,4 +31,14 @@ Dashboard
         <strong>Error -- No rows!</strong>
     </p>
     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" class="init">
+        $(document).ready(function () {
+            $('#datatable').DataTable();
+        });
+    </script>
 {% endblock %}

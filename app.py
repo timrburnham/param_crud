@@ -6,32 +6,47 @@ import flask_sqlalchemy
 import flask_wtf
 import flask_login
 import flask_bootstrap
+from pathlib import Path
 # import werkzeug.security as ws
 
 config = configparser.ConfigParser(interpolation=None)
-config.read('secret.ini')
-db_url = config.get('app', 'db')
-db_args = config['connection']
+config.read(Path.home() / 'secret.ini')
 
 app = flask.Flask(__name__)
-app.config['SECRET_KEY'] = config.get('app', 'sha_key')
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url.format(**db_args)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = config.get('app', 'flask_secret_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = config.get('app', 'dsn')
 bootstrap = flask_bootstrap.Bootstrap(app)
 db = flask_sqlalchemy.SQLAlchemy(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-class User(flask_login.UserMixin, db.Model):
+class Schema():
+    __table_args__ = { "schema": config.get('app', 'schema') }
+
+class SystemJobControl(Schema, db.Model):
+    job_nme = db.Column(db.String(8), primary_key=True)
+    batch_cfg_id = db.Column(db.String(8), primary_key=True)
+    job_desc = db.Column(db.String(255))
+    sys_load_dtm = db.Column(db.DateTime)
+    sys_updt_dtm = db.Column(db.DateTime)
+    sys_updt_by = db.Column(db.String(18))
+    notify = db.Column(db.String(255))
+
+class SystemJobParameterValue(Schema, db.Model):
+    job_nme = db.Column(db.String(8), primary_key=True)
+    batch_cfg_id = db.Column(db.String(8), primary_key=True)
+    etl_job_nme = db.Column(db.String(150), primary_key=True)
+    parm_nme = db.Column(db.String(100), primary_key=True)
+    parm_val = db.Column(db.String(1024))
+    sys_load_dtm = db.Column(db.DateTime)
+    sys_updt_dtm = db.Column(db.DateTime)
+    sys_updt_by = db.Column(db.String(18))
+    parm_actv_flg = db.Column(db.String(1))
+
+class User(Schema, flask_login.UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
-
-class TAB(db.Model):
-    K = db.Column(db.Integer, primary_key=True)
-    V = db.Column(db.String(256))
-
-# class Jobs(db.Model):
 
 
 @login_manager.user_loader
@@ -49,19 +64,24 @@ class RegisterForm(flask_wtf.FlaskForm):
     password = wtf.PasswordField('password', validators=[wtfv.InputRequired(), wtfv.Length(min=8, max=80)])
 
 
-@app.route('/get/', methods=['GET'])
-@app.route('/get/<int:id>', methods=['GET'])
-@flask_login.login_required
-def get(id=None):
-    if id:
-        rows = TAB.query.filter_by(K=id).all() # or .all()
-    else:
-        rows = TAB.query.all()
+@app.route('/job/', methods=['GET'])
+# @flask_login.login_required
+def job():
+    rows = SystemJobControl.query.all()
+    return flask.render_template("job.html", rows=rows)
 
-    return flask.render_template(
-        "get.html",
-        rows=rows
-    )
+@app.route('/param/', methods=['GET'])
+def param():
+    job_nme = flask.request.args.get('job_nme')
+    batch_cfg_id = flask.request.args.get('batch_cfg_id')
+    if job_nme and batch_cfg_id:
+        rows = SystemJobParameterValue.query.filter_by(job_nme=job_nme).filter_by(batch_cfg_id=batch_cfg_id).all()
+    elif job_nme:
+        rows = SystemJobParameterValue.query.filter_by(job_nme=job_nme).all()
+    else:
+        job_nme = "All params"
+        rows = SystemJobParameterValue.query.all()
+    return flask.render_template("param.html", job_nme=job_nme, rows=rows)
 
 @app.route('/')
 def index():

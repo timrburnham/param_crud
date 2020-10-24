@@ -7,8 +7,8 @@ db = flask_sqlalchemy.SQLAlchemy()
 
 class Schema():
     # TODO! figure out how to get the config back
-    # __table_args__ = { "schema": config.get('app', 'schema') }
-    __table_args__ = { "schema": 'T41654B' }
+    __table_args__ = { "schema": config.get('app', 'schema') }
+    # __table_args__ = { "schema": 'T41654B' }
 
 class SystemJobControl(Schema, db.Model):
     job_nme = db.Column(db.String(8), primary_key=True)

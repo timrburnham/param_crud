@@ -22,41 +22,39 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.route('/job/')
+@app.route('/job/', methods=['GET'])
 def job():
-    # return flask.render_template('job_server.html', project='job_server')
-    return flask.render_template('job_server.html')
+    """Serve /job/ page"""
+    return flask.render_template('job.html')
 
 @app.route('/param/', methods=['GET'])
-def param():
-    job_nme = flask.request.args.get('job_nme')
-    batch_cfg_id = flask.request.args.get('batch_cfg_id')
-    return flask.render_template("param_server.html", job_nme=job_nme, batch_cfg_id=batch_cfg_id)
+@app.route('/param/<job_nme>/', methods=['GET'])
+@app.route('/param/<job_nme>/<batch_cfg_id>', methods=['GET'])
+def param(job_nme=None, batch_cfg_id=None):
+    """Serve /param/ page"""
+    return flask.render_template("param.html", job_nme=job_nme, batch_cfg_id=batch_cfg_id)
 
 @app.route('/api/v1/job/')
-def api_job():
-    """Return server side data."""
-    # defining columns
+def apiv1_job():
+    """Return job list to DataTables AJAX client."""
     columns = [
         datatables.ColumnDT(SystemJobControl.job_nme),
         datatables.ColumnDT(SystemJobControl.batch_cfg_id),
         datatables.ColumnDT(SystemJobControl.job_desc)
     ]
-    # defining the initial query depending on your purpose
+
+    # build query
     query = db.session.query().select_from(SystemJobControl)
-    # GET parameters
+
     params = flask.request.args.to_dict()
-    # instantiating a DataTable for the query and table needed
     rowTable = datatables.DataTables(params, query, columns)
-    # returns what is needed by DataTable
     return flask.jsonify(rowTable.output_result())
 
 @app.route('/api/v1/param/')
-def api_param():
-    """Return server side data."""
-    job_nme = flask.request.args.get('job_nme')
-    batch_cfg_id = flask.request.args.get('batch_cfg_id')
-    # defining columns
+@app.route('/api/v1/param/<job_nme>/')
+@app.route('/api/v1/param/<job_nme>/<batch_cfg_id>')
+def apiv1_param(job_nme=None, batch_cfg_id=None):
+    """Return job parameters to DataTables AJAX client."""
     columns = [
         datatables.ColumnDT(SystemJobParameterValue.job_nme),
         datatables.ColumnDT(SystemJobParameterValue.batch_cfg_id),
@@ -65,17 +63,16 @@ def api_param():
         datatables.ColumnDT(SystemJobParameterValue.parm_val),
         datatables.ColumnDT(SystemJobParameterValue.parm_actv_flg)
     ]
-    # defining the initial query depending on your purpose
+
+    # build query
     query = db.session.query().select_from(SystemJobParameterValue)
     if job_nme:
         query = query.filter_by(job_nme=job_nme)
     if batch_cfg_id:
         query = query.filter_by(batch_cfg_id=batch_cfg_id)
-    # GET parameters
+
     params = flask.request.args.to_dict()
-    # instantiating a DataTable for the query and table needed
     rowTable = datatables.DataTables(params, query, columns)
-    # returns what is needed by DataTable
     return flask.jsonify(rowTable.output_result())
 
 @app.route('/')
@@ -97,7 +94,6 @@ def login():
                 return flask.redirect(flask.url_for('dashboard'))
 
         return '<h1>Invalid username or password</h1>'
-        # return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
 
     return flask.render_template('login.html', form=form)
 

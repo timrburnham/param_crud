@@ -6,42 +6,46 @@ Dashboard
 
 {% block styles %}
 {{super()}}
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.css" />
 {% endblock %}
 
 {% block content %}
-    <h1>Job control</h1>
-    {% if rows %}
-    <table id="datatable" class="table">
-        <thead>
-            <tr>
-                <th scope="col">Job name</th>
-                <th scope="col">Batch config id</th>
-                <th scope="col">Job description</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for row in rows %}
-        <tr>
-            <td><a href="/param?job_nme={{ row.job_nme }}">{{ row.job_nme }}</a></td>
-            <td><a href="/param?job_nme={{ row.job_nme }}&batch_cfg_id={{ row.batch_cfg_id }}">{{ row.batch_cfg_id }}</td></a>
-            <td>{{ row.job_desc }}</td>
-        </tr>
-        {% endfor %}
-    </tbody></table>
-    {% else %}
-    <p>
-        <strong>Error -- No rows!</strong>
-    </p>
-    {% endif %}
+<h1>Job control</h1>
+<table id="datatable" class="table">
+  <thead>
+    <tr>
+      <th scope="col">Job name</th>
+      <th scope="col">Batch config id</th>
+      <th scope="col">Job description</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 {% endblock %}
 
 {% block scripts %}
-    {{super()}}
-    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.js"></script>
-    <script type="text/javascript" class="init">
-        $(document).ready(function () {
-            $('#datatable').DataTable();
-        });
-    </script>
+{{super()}}
+<script type="text/javascript"
+  src="https://cdn.datatables.net/v/bs4/dt-1.10.22/fh-3.1.7/kt-2.5.3/sp-1.2.0/datatables.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function () {
+    var table = $('#datatable').DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": "{{ url_for('apiv1_job') }}",
+      "columnDefs": [{
+        "targets": 0,
+        "render": function (data, type, row, meta) {
+          return `<a href="/param/${data}">${data}</a>`;
+        }
+      },
+      {
+        "targets": 1,
+        "render": function (data, type, row, meta) {
+          return `<a href="/param/${row[0]}/${data}">${data}</a>`;
+        }
+      }]
+    });
+  });
+</script>
 {% endblock %}
